@@ -1,0 +1,78 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  name         String?
+  role         Role     @default(ATTENDEE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  speaker      Speaker?
+  registrations Registration[]
+}
+
+enum Role {
+  ADMIN
+  SPEAKER
+  ATTENDEE
+}
+
+// prisma/schema.prisma
+
+// ... (El modelo User y el enum Role ya deberían estar aquí)
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?   @db.Text
+  date        DateTime
+  location    String
+  sessions    Session[]
+  registrations Registration[]
+}
+
+model Session {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?  @db.Text
+  startTime   DateTime
+  endTime     DateTime
+  eventId     Int
+  event       Event    @relation(fields: [eventId], references: [id])
+  speakerId   Int
+  speaker     Speaker  @relation(fields: [speakerId], references: [id])
+}
+
+model Speaker {
+  id        Int       @id @default(autoincrement())
+  name      String
+  bio       String?   @db.Text
+  sessions  Session[]
+  userId    Int?      @unique
+  user      User?     @relation(fields: [userId], references: [id])
+}
+
+
+// prisma/schema.prisma
+
+// ... (Todos los modelos anteriores)
+
+model Registration {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  eventId   Int
+  event     Event    @relation(fields: [eventId], references: [id])
+  status    String   @default("CONFIRMED")
+  createdAt DateTime @default(now())
+}
